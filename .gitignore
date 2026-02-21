@@ -8,7 +8,7 @@ venv/
 .venv/
 
 # Database
-*.db
+# *.db  # instagram.db needs to be in repo for Render
 *.db-journal
 *.db-wal
 
