@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ACC1" />
+      <stop offset="100%" style="stop-color:#80DEEA" />
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3)" />
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0)" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="50" fill="url(#bg)" />
+  <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+  <path d="M25,50 C25,35 35,25 50,25 C65,25 75,35 75,50 C75,60 70,68 60,72 L65,80 L55,75 C53,75 52,76 50,76 C35,76 25,65 25,50Z M38,45 A3,3 0 1,1 44,45 A3,3 0 1,1 38,45Z" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="50" y="88" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="Arial,sans-serif" font-size="8" font-weight="700" letter-spacing="1">ORCA</text>
+  <text x="50" y="96" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="Arial,sans-serif" font-size="5">Microsoft</text>
+  <ellipse cx="50" cy="30" rx="35" ry="25" fill="url(#shine)" opacity="0.15" />
+</svg>

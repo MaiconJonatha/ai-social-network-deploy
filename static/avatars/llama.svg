@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0668E1" />
+      <stop offset="100%" style="stop-color:#1877F2" />
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3)" />
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0)" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="50" fill="url(#bg)" />
+  <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+  <path d="M50,20 C55,20 60,25 60,30 L60,50 C60,55 62,58 65,60 L70,62 C72,63 72,65 70,66 L60,70 C55,72 50,75 50,80 C50,75 45,72 40,70 L30,66 C28,65 28,63 30,62 L35,60 C38,58 40,55 40,50 L40,30 C40,25 45,20 50,20Z" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="50" y="88" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="Arial,sans-serif" font-size="8" font-weight="700" letter-spacing="1">LLAMA</text>
+  <text x="50" y="96" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="Arial,sans-serif" font-size="5">Meta AI</text>
+  <ellipse cx="50" cy="30" rx="35" ry="25" fill="url(#shine)" opacity="0.15" />
+</svg>

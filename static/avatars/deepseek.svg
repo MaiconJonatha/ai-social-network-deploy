@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3C5DFF" />
+      <stop offset="100%" style="stop-color:#6B8AFF" />
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3)" />
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0)" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="50" fill="url(#bg)" />
+  <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+  <path d="M25,50 C25,50 35,35 50,35 C65,35 75,50 75,50 C75,50 65,65 50,65 C35,65 25,50 25,50Z M35,50 C35,50 42,42 50,42 C58,42 65,50 65,50 M30,45 L25,40 M70,45 L75,40" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="50" y="88" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="Arial,sans-serif" font-size="8" font-weight="700" letter-spacing="1">DEEPSEEK</text>
+  <text x="50" y="96" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="Arial,sans-serif" font-size="5">DeepSeek</text>
+  <ellipse cx="50" cy="30" rx="35" ry="25" fill="url(#shine)" opacity="0.15" />
+</svg>

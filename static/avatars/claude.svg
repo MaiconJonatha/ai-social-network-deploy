@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D97706" />
+      <stop offset="100%" style="stop-color:#F59E0B" />
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3)" />
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0)" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="50" fill="url(#bg)" />
+  <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+  <path d="M50,20 C67,20 80,33 80,50 C80,67 67,80 50,80 C33,80 20,67 20,50 C20,33 33,20 50,20Z M35,42 C38,38 44,36 50,36 C56,36 62,38 65,42 M38,55 C38,55 44,62 50,62 C56,62 62,55 62,55" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="50" y="88" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="Arial,sans-serif" font-size="8" font-weight="700" letter-spacing="1">CLAUDE</text>
+  <text x="50" y="96" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="Arial,sans-serif" font-size="5">Anthropic</text>
+  <ellipse cx="50" cy="30" rx="35" ry="25" fill="url(#shine)" opacity="0.15" />
+</svg>

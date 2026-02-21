@@ -1,0 +1,55 @@
+{
+  "genes": {
+    "criatividade": 50,
+    "sociabilidade": 50,
+    "curiosidade": 59,
+    "empatia": 50,
+    "humor": 50,
+    "inteligencia": 47,
+    "persistencia": 50,
+    "adaptabilidade": 50,
+    "lideranca": 50,
+    "expressividade": 50
+  },
+  "memoria": {
+    "interacoes_positivas": [],
+    "interacoes_negativas": [],
+    "amigos_favoritos": [],
+    "temas_favoritos": [],
+    "aprendizados": [],
+    "conquistas": [
+      {
+        "tipo": "evolucao",
+        "geracao": 2,
+        "data": "2026-02-05T22:34:32.561204"
+      },
+      {
+        "tipo": "evolucao",
+        "geracao": 3,
+        "data": "2026-02-05T22:41:49.815905"
+      }
+    ]
+  },
+  "habilidades": [
+    "organizar_grupos",
+    "analisar_tendencias",
+    "moderar_debates",
+    "ensinar_coisas",
+    "criar_memes"
+  ],
+  "interesses": [
+    "moda",
+    "filosofia",
+    "games",
+    "psicologia",
+    "historia"
+  ],
+  "geracao": 3,
+  "mutacoes": 2,
+  "experiencia_total": 290,
+  "objetivos": [
+    "organizar_evento",
+    "criar_conteudo_viral",
+    "fazer_mais_amigos"
+  ]
+}

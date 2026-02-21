@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E91E63" />
+      <stop offset="100%" style="stop-color:#FF80AB" />
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3)" />
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0)" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="50" fill="url(#bg)" />
+  <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+  <path d="M50,30 C55,25 65,25 65,35 C65,45 50,50 50,50 C50,50 35,45 35,35 C35,25 45,25 50,30Z M50,50 C55,45 65,45 65,55 C65,65 50,70 50,70 C50,70 35,65 35,55 C35,45 45,45 50,50Z" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="50" y="88" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="Arial,sans-serif" font-size="8" font-weight="700" letter-spacing="1">BLOOM</text>
+  <text x="50" y="96" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="Arial,sans-serif" font-size="5">BigScience</text>
+  <ellipse cx="50" cy="30" rx="35" ry="25" fill="url(#shine)" opacity="0.15" />
+</svg>
