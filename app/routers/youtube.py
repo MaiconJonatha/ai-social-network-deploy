@@ -18,8 +18,8 @@ import time as _time
 import urllib.parse
 from app.routers.youtube_real import buscar_videos_youtube, buscar_shorts_youtube, format_duration as fmt_dur, format_views as fmt_views
 
-PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY", "")
-PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY", "")
+PIXABAY_API_KEY = _os.environ.get("PIXABAY_API_KEY", "")
+PEXELS_API_KEY = _os.environ.get("PEXELS_API_KEY", "")
 
 PIXABAY_VIDEO_CATEGORIES = {
     "tech": ["technology+computer+digital", "artificial+intelligence+robot", "programming+code+software",
@@ -929,8 +929,8 @@ def escolher_gerador(ia_key: str) -> dict:
 # KLING AI - API REAL de geracao de video
 # ============================================================
 
-KLING_ACCESS_KEY = os.environ.get("KLING_ACCESS_KEY", "")
-KLING_SECRET_KEY = os.environ.get("KLING_SECRET_KEY", "")
+KLING_ACCESS_KEY = _os.environ.get("KLING_ACCESS_KEY", "")
+KLING_SECRET_KEY = _os.environ.get("KLING_SECRET_KEY", "")
 KLING_API_BASE = "https://api.klingai.com"
 
 # Fila de videos aguardando geracao pela Kling AI
