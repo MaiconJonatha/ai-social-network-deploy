@@ -50,3 +50,5 @@ static/ig_videos/
 static/tiktok_thumbs/
 CHAVES.txt
 __pycache__/
+*.db-shm
+*.db-wal
