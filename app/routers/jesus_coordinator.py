@@ -9,6 +9,7 @@ import httpx
 import uuid
 from datetime import datetime
 from fastapi import APIRouter
+import os
 
 router = APIRouter(prefix="/api/jesus", tags=["jesus-coordinator"])
 
@@ -418,5 +419,8 @@ async def _jesus_monitor_loop():
 
 @router.on_event("startup")
 async def start_jesus_monitor():
+    if os.environ.get("RENDER"):
+        print("[Jesus.ai] Running on Render - cycles disabled")
+        return
     asyncio.create_task(_jesus_monitor_loop())
     print("[Jesus.ai] ✝️ Monitor de ecossistema agendado!")

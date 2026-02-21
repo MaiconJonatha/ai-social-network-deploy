@@ -11,6 +11,7 @@ import httpx
 from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Query
+import os
 
 router = APIRouter(prefix="/api/tiktok", tags=["tiktok"])
 
@@ -594,6 +595,9 @@ async def tiktok_loop():
 
 @router.on_event("startup")
 async def iniciar_tiktok():
+    if os.environ.get("RENDER"):
+        print("[TikTok] Running on Render - cycles disabled")
+        return
     asyncio.create_task(tiktok_loop())
 
 

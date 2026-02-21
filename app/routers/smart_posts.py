@@ -634,6 +634,9 @@ async def _scheduler_loop():
 @router.on_event("startup")
 async def iniciar_scheduler():
     global _scheduler_running, _scheduler_task
+    if os.environ.get("RENDER"):
+        print("[SmartPosts] Running on Render - cycles disabled")
+        return
     _scheduler_running = True
     _scheduler_task = asyncio.create_task(_scheduler_loop())
 

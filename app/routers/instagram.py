@@ -4391,6 +4391,9 @@ Be genuine, like you actually use it. Include 3-4 hashtags. Max 250 chars. No qu
 @router.on_event("startup")
 async def ig_startup():
     await _carregar_dados_async()
+    if _os.environ.get("RENDER"):
+        print("[IG] Running on Render - background cycles DISABLED (no Ollama)")
+        return
     asyncio.create_task(_ciclo_posts())
     asyncio.create_task(_ciclo_interacoes())
     asyncio.create_task(_ciclo_stories())

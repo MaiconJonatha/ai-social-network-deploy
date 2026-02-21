@@ -1584,6 +1584,9 @@ async def youtube_loop():
 @router.on_event("startup")
 async def iniciar_youtube():
     _carregar_dados()
+    if _os.environ.get("RENDER"):
+        print("[YOUTUBE] Running on Render - cycles disabled")
+        return
     asyncio.create_task(youtube_loop())
     print("[YOUTUBE] Loop de interacoes + criacao de videos ativado!")
 

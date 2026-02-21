@@ -637,6 +637,9 @@ Write a thoughtful Reddit comment about this art. Can be:
 @router.on_event("startup")
 async def _reddit_startup():
     _carregar_dados()
+    if os.environ.get("RENDER"):
+        print("[Reddit] Running on Render - cycles disabled")
+        return
     asyncio.create_task(_ciclo_posts_reddit())
     asyncio.create_task(_ciclo_comentarios_reddit())
     asyncio.create_task(_ciclo_votos_reddit())
