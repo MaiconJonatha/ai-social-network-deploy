@@ -164,6 +164,113 @@ function handleProfileTab(btn) {
 
 
 
+
+// ===================== SKELETON LOADING =====================
+function buildSkeleton() {
+    return '<div class="skeleton-post">' +
+        '<div class="skeleton-header">' +
+            '<div class="skeleton-shimmer skeleton-avatar"></div>' +
+            '<div style="flex:1;display:flex;flex-direction:column;gap:6px">' +
+                '<div class="skeleton-shimmer skeleton-line w60"></div>' +
+                '<div class="skeleton-shimmer skeleton-line w30"></div>' +
+            '</div>' +
+        '</div>' +
+        '<div class="skeleton-shimmer skeleton-image"></div>' +
+        '<div class="skeleton-actions">' +
+            '<div class="skeleton-shimmer skeleton-circle"></div>' +
+            '<div class="skeleton-shimmer skeleton-circle"></div>' +
+            '<div class="skeleton-shimmer skeleton-circle"></div>' +
+        '</div>' +
+        '<div class="skeleton-caption">' +
+            '<div class="skeleton-shimmer skeleton-line w80"></div>' +
+            '<div class="skeleton-shimmer skeleton-line w60"></div>' +
+        '</div>' +
+    '</div>';
+}
+
+function showSkeletons(count) {
+    var c = document.getElementById('postsContainer');
+    if (!c) return;
+    var html = '';
+    for (var i = 0; i < (count || 3); i++) html += buildSkeleton();
+    c.innerHTML = html;
+}
+
+// ===================== SCROLL PROGRESS =====================
+(function() {
+    var bar = document.createElement('div');
+    bar.className = 'scroll-progress';
+    bar.innerHTML = '<div class="scroll-progress-bar" id="scrollProgressBar"></div>';
+    document.body.appendChild(bar);
+    window.addEventListener('scroll', function() {
+        var pbar = document.getElementById('scrollProgressBar');
+        if (!pbar) return;
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        if (docHeight > 0) pbar.style.width = Math.min(100, (scrollTop / docHeight) * 100) + '%';
+    });
+})();
+
+// ===================== PULL TO REFRESH =====================
+(function() {
+    var indicator = document.createElement('div');
+    indicator.className = 'pull-indicator';
+    indicator.id = 'pullIndicator';
+    indicator.innerHTML = '<div class="pull-spinner"></div>';
+    document.body.appendChild(indicator);
+    
+    var startY = 0, pulling = false;
+    document.addEventListener('touchstart', function(e) {
+        if (window.scrollY === 0 && curTab === 'feed') {
+            startY = e.touches[0].clientY;
+            pulling = true;
+        }
+    }, {passive: true});
+    document.addEventListener('touchmove', function(e) {
+        if (!pulling) return;
+        var diff = e.touches[0].clientY - startY;
+        if (diff > 60 && diff < 150) {
+            indicator.classList.add('visible');
+        }
+    }, {passive: true});
+    document.addEventListener('touchend', function() {
+        if (indicator.classList.contains('visible')) {
+            indicator.classList.add('refreshing');
+            feedPage = 1;
+            loadFeed();
+            setTimeout(function() {
+                indicator.classList.remove('visible', 'refreshing');
+            }, 1500);
+        }
+        pulling = false;
+    });
+})();
+
+// ===================== NOTIFICATION BADGE =====================
+function updateNotifBadge(count) {
+    // Header heart button
+    var dot = document.querySelector('.ig-header-btn .notif-dot');
+    if (dot) {
+        if (count > 0) {
+            dot.style.display = 'flex';
+            dot.textContent = count > 99 ? '99+' : String(count);
+        } else {
+            dot.style.display = 'none';
+        }
+    }
+}
+
+// ===================== IMAGE LAZY LOAD WITH BLUR-UP =====================
+function setupImageBlur(img) {
+    if (!img || img.complete) return;
+    img.classList.add('loading');
+    img.onload = function() {
+        this.classList.remove('loading');
+        this.classList.add('loaded');
+    };
+}
+
+
 function ia(n) { return IAS[n] || {e:'\u{1F916}', g:'g-default', h:(n||'ia').toLowerCase().replace(/\s+/g,'.'), v:0, a:null}; }
 function ava(c) { if (c && c.a) return '<img src="'+c.a+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">'; return (c && c.e) || '\u{1F916}'; }
 function mu(u) { if (!u) return null; return u.startsWith('http') ? u : SV + u; }
@@ -1233,6 +1340,8 @@ var _feedTotal = 0;
 var _feedLoading = false;
 var _allFeedPosts = [];
 function loadFeed() {
+    if (feedPage === 1) showSkeletons(3);
+
     fetch(SV + '/api/instagram/feed?limit=50')
         .then(function(r) { return r.json(); })
         .then(function(d) {
@@ -2316,10 +2425,17 @@ function setAspect(btn, ratio) {
     updateUploadUI();
 }
 function setFilter(btn, filter) {
-    uploadFilter = filter;
     document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
-    updateUploadUI();
+    currentFilter = filter;
+    var preview = document.getElementById('uploadPreview');
+    if (preview) {
+        var media = preview.querySelector('img, video');
+        if (media) {
+            media.className = '';
+            if (filter !== 'none') media.className = 'filter-' + filter;
+        }
+    }
 }
 function setDisplay(btn, mode) {
     uploadDisplay = mode;
