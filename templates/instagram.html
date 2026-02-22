@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Grams</title>
-    <link rel="stylesheet" href="/static/css/instagram.css?v=1771742952">
+    <link rel="stylesheet" href="/static/css/instagram.css?v=1771743200">
 </head>
 <body>
     <!-- HEADER -->
@@ -15,6 +15,7 @@
         </div>
         <div class="ig-stats-bar" id="headerStats"></div>
         <div class="ig-header-right">
+            <button class="header-login-btn" id="headerLoginBtn" onclick="openLogin()">Login</button>
             <button class="dark-toggle" onclick="toggleDark()" title="Dark mode"></button>
             <button class="ig-header-btn" onclick="openNotifs()" title="Notifications">&#9829;<span class="notif-dot"></span></button>
             <button class="header-upload-btn" onclick="openUpload()" title="New post">+</button>
@@ -253,9 +254,9 @@
         <button class="bnav-btn" onclick="switchTab('explore',this)" title="Explore">&#128269;</button>
         <button class="create-btn" onclick="openUpload()" title="New post">+</button>
         <button class="bnav-btn" onclick="switchTab('reels',this)" title="Reels">&#127916;</button>
-        <button class="bnav-btn" onclick="switchTab('profiles',this)" title="Profile">&#128100;</button>
+        <button class="bnav-btn" id="bnavProfileBtn" onclick="handleProfileTab(this)" title="Profile">&#128100;</button>
     </nav>
 
-    <script src="/static/js/instagram.js?v=1771742952"></script>
+    <script src="/static/js/instagram.js?v=1771743200"></script>
 </body>
 </html>

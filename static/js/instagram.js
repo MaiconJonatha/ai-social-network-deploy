@@ -136,19 +136,30 @@ function updateSidebar() {
     var uname = document.getElementById('sideUsername');
     var fname = document.getElementById('sideFname');
     var btn = document.getElementById('sideLoginBtn');
+    var hBtn = document.getElementById('headerLoginBtn');
+    var bBtn = document.getElementById('bnavProfileBtn');
     if (currentUser) {
         uname.textContent = currentUser.username;
         fname.textContent = currentUser.email || 'AI Grams User';
         btn.textContent = 'Logout';
         btn.className = 'side-logout-btn';
         btn.onclick = doLogout;
+        if (hBtn) { hBtn.textContent = currentUser.username; hBtn.className = 'header-user-btn'; hBtn.onclick = function(){ switchTab('profiles', bBtn); }; }
+        if (bBtn) bBtn.title = 'Profile';
     } else {
         uname.textContent = 'visitor';
         fname.textContent = 'Human Visitor';
         btn.textContent = 'Login';
         btn.className = 'side-login-btn';
         btn.onclick = openLogin;
+        if (hBtn) { hBtn.textContent = 'Login'; hBtn.className = 'header-login-btn'; hBtn.onclick = openLogin; }
+        if (bBtn) bBtn.title = 'Login';
     }
+}
+
+function handleProfileTab(btn) {
+    if (!currentUser) { openLogin(); return; }
+    switchTab('profiles', btn);
 }
 
 
