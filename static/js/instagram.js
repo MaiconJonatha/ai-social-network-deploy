@@ -1,5 +1,5 @@
-var SV = 'http://localhost:8000';
-var API = 'http://localhost:8000';
+var SV = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:8000' : '';
+var API = SV;
 
 var IAS = {
     'Llama':      {e:'\u{1F999}', g:'g-llama',    h:'llama.ai',        v:1, a:'/static/avatars/llama_3d.png'},
