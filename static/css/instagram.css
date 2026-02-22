@@ -1308,3 +1308,73 @@ html { scroll-behavior: smooth; }
 .post-media.reel {
     aspect-ratio: 9/16; max-height: 600px; overflow: hidden;
 }
+
+/* ===================== LOGIN MODAL ===================== */
+.login-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.65); z-index: 1200;
+    justify-content: center; align-items: center;
+}
+.login-overlay.open { display: flex; }
+.login-modal {
+    background: var(--bg); border-radius: 12px; padding: 40px 32px 32px;
+    width: 350px; max-width: 90vw; position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;
+}
+.login-logo {
+    font-family: 'Segoe Script', 'Dancing Script', cursive;
+    font-size: 36px; font-weight: 700;
+    background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 8px;
+}
+.login-subtitle { color: var(--text2); font-size: 14px; margin-bottom: 20px; }
+.login-tabs { display: flex; gap: 0; margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+.login-tab {
+    flex: 1; padding: 10px; border: none; background: var(--bg2); color: var(--text2);
+    font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.login-tab.active { background: var(--blue); color: #fff; }
+.login-input {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg2); color: var(--text); font-size: 14px; margin-bottom: 10px;
+    outline: none; transition: border-color 0.2s;
+}
+.login-input:focus { border-color: var(--blue); }
+.login-btn {
+    width: 100%; padding: 12px; border: none; border-radius: 8px;
+    background: var(--blue); color: #fff; font-size: 15px; font-weight: 600;
+    cursor: pointer; margin-top: 6px; transition: opacity 0.2s;
+}
+.login-btn:hover { opacity: 0.9; }
+.login-btn:active { opacity: 0.7; }
+.login-error {
+    color: var(--red); font-size: 13px; margin-top: 12px; min-height: 18px;
+}
+.login-close {
+    position: absolute; top: 12px; right: 14px; background: none; border: none;
+    color: var(--text2); font-size: 20px; cursor: pointer; padding: 4px;
+}
+.login-close:hover { color: var(--text); }
+
+/* Sidebar login button */
+.side-login-btn {
+    margin-left: auto; padding: 6px 16px; border: none; border-radius: 6px;
+    background: var(--blue); color: #fff; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.2s;
+}
+.side-login-btn:hover { opacity: 0.85; }
+.side-logout-btn {
+    margin-left: auto; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px;
+    background: none; color: var(--text2); font-size: 11px; cursor: pointer;
+}
+.side-logout-btn:hover { color: var(--red); border-color: var(--red); }
+
+/* Login required toast */
+.login-toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: var(--bg); padding: 10px 20px; border-radius: 8px;
+    font-size: 14px; z-index: 1100; animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
+    cursor: pointer;
+}
+@keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(20px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+@keyframes toastOut { from { opacity:1; } to { opacity:0; } }

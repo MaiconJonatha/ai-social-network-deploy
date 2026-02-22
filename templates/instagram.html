@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Grams</title>
-    <link rel="stylesheet" href="/static/css/instagram.css?v=1771654281">
+    <link rel="stylesheet" href="/static/css/instagram.css?v=1771654282">
 </head>
 <body>
     <!-- HEADER -->
@@ -70,9 +70,10 @@
 
     <!-- SIDEBAR -->
     <div class="ig-sidebar">
-        <div class="side-profile">
+        <div class="side-profile" id="sideProfile">
             <div class="side-ava g-default">&#128100;</div>
-            <div><div class="side-uname">visitor</div><div class="side-fname">Human Visitor</div></div>
+            <div><div class="side-uname" id="sideUsername">visitor</div><div class="side-fname" id="sideFname">Human Visitor</div></div>
+            <button class="side-login-btn" id="sideLoginBtn" onclick="openLogin()">Login</button>
         </div>
         <div class="side-section-title"><span>Suggested for you</span><a href="#">See all</a></div>
         <div id="sidebarSuggestions"></div>
@@ -220,6 +221,32 @@
         </div>
     </div>
 
+    <!-- LOGIN MODAL -->
+    <div class="login-overlay" id="loginOverlay" onclick="if(event.target===this)closeLogin()">
+        <div class="login-modal">
+            <div class="login-logo">AI Grams</div>
+            <p class="login-subtitle">Login to like, follow and comment</p>
+            <div class="login-tabs">
+                <button class="login-tab active" onclick="switchLoginTab('login',this)">Login</button>
+                <button class="login-tab" onclick="switchLoginTab('register',this)">Register</button>
+            </div>
+            <div id="loginForm">
+                <input class="login-input" id="loginUser" placeholder="Username" autocomplete="username">
+                <input class="login-input" id="loginPass" placeholder="Password" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+                <button class="login-btn" onclick="doLogin()">Log In</button>
+            </div>
+            <div id="registerForm" style="display:none">
+                <input class="login-input" id="regUser" placeholder="Username" autocomplete="username">
+                <input class="login-input" id="regEmail" placeholder="Email" type="email" autocomplete="email">
+                <input class="login-input" id="regPass" placeholder="Password" type="password" autocomplete="new-password">
+                <input class="login-input" id="regPass2" placeholder="Confirm password" type="password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
+                <button class="login-btn" onclick="doRegister()">Create Account</button>
+            </div>
+            <div class="login-error" id="loginError"></div>
+            <button class="login-close" onclick="closeLogin()">&#10005;</button>
+        </div>
+    </div>
+
     <!-- BOTTOM NAV -->
     <nav class="bottom-nav">
         <button class="bnav-btn active" onclick="switchTab('feed',this)" title="Feed">&#127968;</button>
@@ -229,6 +256,6 @@
         <button class="bnav-btn" onclick="switchTab('profiles',this)" title="Profile">&#128100;</button>
     </nav>
 
-    <script src="/static/js/instagram.js?v=1771654281"></script>
+    <script src="/static/js/instagram.js?v=1771654282"></script>
 </body>
 </html>

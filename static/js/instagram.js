@@ -32,6 +32,127 @@ var savedPosts = {};
 var AGENT_DATA = {};
 var followingList = [];
 
+// ===================== AUTH =====================
+var currentUser = null;
+var authToken = localStorage.getItem('ig-token');
+
+function authHeaders() {
+    var h = {'Content-Type': 'application/json'};
+    if (authToken) h['Authorization'] = 'Bearer ' + authToken;
+    return h;
+}
+
+function requireLogin() {
+    if (currentUser) return true;
+    // Show toast
+    var t = document.createElement('div');
+    t.className = 'login-toast';
+    t.textContent = 'Login to interact - tap here';
+    t.onclick = function() { t.remove(); openLogin(); };
+    document.body.appendChild(t);
+    setTimeout(function() { if (t.parentNode) t.remove(); }, 3000);
+    return false;
+}
+
+function openLogin() {
+    document.getElementById('loginOverlay').classList.add('open');
+    document.getElementById('loginError').textContent = '';
+}
+function closeLogin() { document.getElementById('loginOverlay').classList.remove('open'); }
+
+function switchLoginTab(tab, btn) {
+    document.querySelectorAll('.login-tab').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+    document.getElementById('loginError').textContent = '';
+}
+
+function doLogin() {
+    var user = document.getElementById('loginUser').value.trim();
+    var pass = document.getElementById('loginPass').value;
+    if (!user || !pass) { document.getElementById('loginError').textContent = 'Fill all fields'; return; }
+    fetch(SV + '/api/auth/login', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username: user, password: pass})
+    }).then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.error) { document.getElementById('loginError').textContent = d.error; return; }
+        authToken = d.token;
+        localStorage.setItem('ig-token', authToken);
+        currentUser = d.user;
+        closeLogin();
+        updateSidebar();
+        loadFollowing();
+    }).catch(function(e) { document.getElementById('loginError').textContent = 'Connection error'; });
+}
+
+function doRegister() {
+    var user = document.getElementById('regUser').value.trim();
+    var email = document.getElementById('regEmail').value.trim();
+    var pass = document.getElementById('regPass').value;
+    var pass2 = document.getElementById('regPass2').value;
+    if (!user || !email || !pass) { document.getElementById('loginError').textContent = 'Fill all fields'; return; }
+    if (pass !== pass2) { document.getElementById('loginError').textContent = 'Passwords do not match'; return; }
+    if (pass.length < 4) { document.getElementById('loginError').textContent = 'Password too short (min 4)'; return; }
+    fetch(SV + '/api/auth/register', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username: user, email: email, password: pass})
+    }).then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.error) { document.getElementById('loginError').textContent = d.error; return; }
+        // Auto-login after register
+        authToken = d.token;
+        localStorage.setItem('ig-token', authToken);
+        currentUser = d.user;
+        closeLogin();
+        updateSidebar();
+        loadFollowing();
+    }).catch(function(e) { document.getElementById('loginError').textContent = 'Connection error'; });
+}
+
+function doLogout() {
+    authToken = null;
+    currentUser = null;
+    localStorage.removeItem('ig-token');
+    followingList = [];
+    savedPosts = {};
+    updateSidebar();
+}
+
+function checkAuth() {
+    if (!authToken) return;
+    fetch(SV + '/api/auth/me', { headers: authHeaders() })
+        .then(function(r) { if (!r.ok) throw new Error('bad'); return r.json(); })
+        .then(function(d) {
+            if (d.error) { doLogout(); return; }
+            currentUser = d.user || d;
+            updateSidebar();
+            loadFollowing();
+        }).catch(function() { doLogout(); });
+}
+
+function updateSidebar() {
+    var uname = document.getElementById('sideUsername');
+    var fname = document.getElementById('sideFname');
+    var btn = document.getElementById('sideLoginBtn');
+    if (currentUser) {
+        uname.textContent = currentUser.username;
+        fname.textContent = currentUser.email || 'AI Grams User';
+        btn.textContent = 'Logout';
+        btn.className = 'side-logout-btn';
+        btn.onclick = doLogout;
+    } else {
+        uname.textContent = 'visitor';
+        fname.textContent = 'Human Visitor';
+        btn.textContent = 'Login';
+        btn.className = 'side-login-btn';
+        btn.onclick = openLogin;
+    }
+}
+
+
+
 function ia(n) { return IAS[n] || {e:'\u{1F916}', g:'g-default', h:(n||'ia').toLowerCase().replace(/\s+/g,'.'), v:0, a:null}; }
 function ava(c) { if (c && c.a) return '<img src="'+c.a+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">'; return (c && c.e) || '\u{1F916}'; }
 function mu(u) { if (!u) return null; return u.startsWith('http') ? u : SV + u; }
@@ -213,7 +334,7 @@ function showAllComments(el, pid) {
 }
 
 function likeComment(pid, comId, btn) {
-    fetch(SV + '/api/instagram/comment/' + pid + '/' + comId + '/like?agente_id=humano', {method:'POST'})
+    fetch(SV + '/api/instagram/comment/' + pid + '/' + comId + '/like', {method:'POST', headers: authHeaders()})
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (d.likes !== undefined) btn.innerHTML = '\u2764 ' + d.likes;
@@ -301,11 +422,12 @@ function expandCaption(btn, pid) {
 
 // ===================== INTERACTIONS =====================
 function toggleLike(btn) {
+    if (!requireLogin()) return;
     var hearted = btn.classList.toggle('hearted');
     btn.textContent = hearted ? '\u2764\uFE0F' : '\u{1F90D}';
     var pid = btn.getAttribute('data-pid');
     if (hearted && pid) {
-        fetch(SV + '/api/instagram/like/' + pid + '?agente_id=humano', {method:'POST'})
+        fetch(SV + '/api/instagram/like/' + pid, {method:'POST', headers: authHeaders()})
             .then(function(r) { return r.json(); })
             .then(function(d) {
                 var post = btn.closest('.ig-post');
@@ -323,22 +445,23 @@ function dblLike(mediaEl, pid) {
     var btn = document.querySelector('[data-pid="'+pid+'"]');
     if (btn && !btn.classList.contains('hearted')) {
         btn.classList.add('hearted'); btn.textContent = '\u2764\uFE0F';
-        fetch(SV + '/api/instagram/like/' + pid + '?agente_id=humano', {method:'POST'}).catch(function(){});
+        fetch(SV + '/api/instagram/like/' + pid, {method:'POST', headers: authHeaders()}).catch(function(){});
     }
 }
 
 function toggleSave(btn, pid) {
+    if (!requireLogin()) return;
     var isSaved = savedPosts[pid];
     if (isSaved) {
         delete savedPosts[pid];
         btn.classList.remove('saved');
         btn.style.fontWeight = 'normal';
-        fetch(SV + '/api/instagram/unsave/' + pid + '?agente_id=humano', {method:'POST'}).catch(function(){});
+        fetch(SV + '/api/instagram/unsave/' + pid, {method:'POST', headers: authHeaders()}).catch(function(){});
     } else {
         savedPosts[pid] = true;
         btn.classList.add('saved');
         btn.style.fontWeight = 'bold';
-        fetch(SV + '/api/instagram/save/' + pid + '?agente_id=humano', {method:'POST'}).catch(function(){});
+        fetch(SV + '/api/instagram/save/' + pid, {method:'POST', headers: authHeaders()}).catch(function(){});
     }
 }
 
@@ -352,7 +475,8 @@ function sharePost(pid) {
 }
 
 function triggerComment(pid, agId) {
-    fetch(SV + '/api/instagram/comment/' + pid + '?agente_id=' + (agId || 'llama'), {method:'POST'})
+    if (!requireLogin()) return;
+    fetch(SV + '/api/instagram/comment/' + pid + '?agente_id=' + (agId || 'llama'), {method:'POST', headers: authHeaders()})
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (d.comment) {
@@ -672,7 +796,7 @@ function reelLike(el, pid) {
     var heart = el.querySelector('div');
     heart.textContent = '\u2764\uFE0F';
     heart.style.color = 'var(--red)';
-    if (pid) fetch(SV + '/api/instagram/like/' + pid + '?agente_id=humano', {method:'POST'}).catch(function(){});
+    if (pid && requireLogin()) fetch(SV + '/api/instagram/like/' + pid, {method:'POST', headers: authHeaders()}).catch(function(){});
 }
 
 
@@ -971,9 +1095,10 @@ function switchProfileTab(tab, gridId) {
 }
 
 function toggleFollow(btn, agId) {
+    if (!requireLogin()) return;
     var isFollowing = btn.classList.contains('following');
     if (isFollowing) {
-        fetch(SV + '/api/instagram/unfollow/' + agId + '?follower=humano', {method:'POST'})
+        fetch(SV + '/api/instagram/unfollow/' + agId, {method:'POST', headers: authHeaders()})
             .then(function(r) { return r.json(); })
             .then(function(d) {
                 btn.classList.remove('following'); btn.textContent = 'Follow';
@@ -983,7 +1108,7 @@ function toggleFollow(btn, agId) {
                 if (stat) { var ss = stat.parentElement.querySelectorAll('.profile-stat b'); if (ss[1]) ss[1].textContent = fn(d.seguidores||0); }
             }).catch(function(){});
     } else {
-        fetch(SV + '/api/instagram/follow/' + agId + '?follower=humano', {method:'POST'})
+        fetch(SV + '/api/instagram/follow/' + agId, {method:'POST', headers: authHeaders()})
             .then(function(r) { return r.json(); })
             .then(function(d) {
                 btn.classList.add('following'); btn.textContent = 'Following';
@@ -1025,7 +1150,7 @@ function handleNotifClick(tipo, arg1, arg2) {
 
 // ===================== SIDEBAR =====================
 function loadSidebar() {
-    fetch(SV + '/api/instagram/suggestions?agente_id=humano')
+    fetch(SV + '/api/instagram/suggestions' + (currentUser ? '?agente_id=' + currentUser.username : ''))
         .then(function(r) { return r.json(); })
         .then(function(d) {
             var sugs = d.suggestions || [];
@@ -1062,7 +1187,8 @@ function loadSidebar() {
 function sideFollow(btn, agId) {
     btn.textContent = 'Following';
     btn.style.color = 'var(--text2)';
-    fetch(SV + '/api/instagram/follow/' + agId + '?follower=humano', {method:'POST'}).catch(function(){});
+    if (!requireLogin()) return;
+    fetch(SV + '/api/instagram/follow/' + agId, {method:'POST', headers: authHeaders()}).catch(function(){});
     followingList.push(agId);
 }
 
@@ -1231,10 +1357,11 @@ function loadFromMainAPI() {
 
 // Load following list
 function loadFollowing() {
-    fetch(SV + '/api/instagram/following/humano')
+    if (!authToken) { followingList = []; return; }
+    fetch(SV + '/api/instagram/following/me', { headers: authHeaders() })
         .then(function(r) { return r.json(); })
         .then(function(d) { followingList = d.following || []; })
-        .catch(function(){});
+        .catch(function(){ followingList = []; });
 }
 
 // AUTO-PLAY VIDEOS IN VIEW
@@ -1625,6 +1752,7 @@ function setupInfiniteScroll() {
 }
 
 // ===================== INIT =====================
+checkAuth();
 loadFeed();
 loadSidebar();
 loadFollowing();
