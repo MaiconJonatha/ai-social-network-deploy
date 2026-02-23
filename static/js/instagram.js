@@ -29,6 +29,105 @@ var IAS = {
 };
 
 var savedPosts = {};
+
+// ===================== PERFORMANCE: API CACHE =====================
+var _apiCache = {};
+var _apiCacheTTL = {};
+var API_CACHE_DURATION = 30000; // 30 seconds
+
+function cachedFetch(url, ttl) {
+    var now = Date.now();
+    var cacheDur = ttl || API_CACHE_DURATION;
+    if (_apiCache[url] && _apiCacheTTL[url] && (now - _apiCacheTTL[url] < cacheDur)) {
+        return Promise.resolve(_apiCache[url]);
+    }
+    return fetch(url).then(function(r) { return r.json(); }).then(function(d) {
+        _apiCache[url] = d;
+        _apiCacheTTL[url] = now;
+        return d;
+    });
+}
+
+function invalidateCache(pattern) {
+    var keys = Object.keys(_apiCache);
+    for (var i = 0; i < keys.length; i++) {
+        if (keys[i].indexOf(pattern) !== -1) {
+            delete _apiCache[keys[i]];
+            delete _apiCacheTTL[keys[i]];
+        }
+    }
+}
+
+// ===================== PERFORMANCE: DEBOUNCE & THROTTLE =====================
+function debounce(fn, delay) {
+    var timer = null;
+    return function() {
+        var ctx = this, args = arguments;
+        clearTimeout(timer);
+        timer = setTimeout(function() { fn.apply(ctx, args); }, delay);
+    };
+}
+
+function throttle(fn, limit) {
+    var last = 0;
+    return function() {
+        var now = Date.now();
+        if (now - last >= limit) {
+            last = now;
+            fn.apply(this, arguments);
+        }
+    };
+}
+
+// ===================== PERFORMANCE: BATCH DOM UPDATES =====================
+var _pendingDOMUpdates = [];
+var _rafScheduled = false;
+function batchDOMUpdate(fn) {
+    _pendingDOMUpdates.push(fn);
+    if (!_rafScheduled) {
+        _rafScheduled = true;
+        requestAnimationFrame(function() {
+            var updates = _pendingDOMUpdates.slice();
+            _pendingDOMUpdates = [];
+            _rafScheduled = false;
+            for (var i = 0; i < updates.length; i++) updates[i]();
+        });
+    }
+}
+
+// ===================== PERFORMANCE: IMPROVED IMAGE OBSERVER =====================
+var _imgObserver = null;
+function setupImageObserver() {
+    if (!('IntersectionObserver' in window)) return;
+    _imgObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                var img = entry.target;
+                if (img.dataset.src) {
+                    img.src = img.dataset.src;
+                    img.removeAttribute('data-src');
+                }
+                img.classList.remove('loading');
+                img.classList.add('loaded');
+                _imgObserver.unobserve(img);
+            }
+        });
+    }, { rootMargin: '200px 0px' });
+}
+setupImageObserver();
+
+function lazyObserve(container) {
+    if (!_imgObserver) return;
+    var imgs = (container || document).querySelectorAll('img[loading="lazy"]');
+    imgs.forEach(function(img) {
+        if (!img.complete) {
+            img.classList.add('loading');
+            _imgObserver.observe(img);
+        }
+    });
+}
+
+
 var AGENT_DATA = {};
 var followingList = [];
 
@@ -84,6 +183,18 @@ function doLogin() {
         closeLogin();
         updateSidebar();
         loadFollowing();
+        // Show premium toast for non-premium users
+        if (currentUser && !currentUser.is_premium) {
+            setTimeout(function() {
+                var t = document.createElement('div');
+                t.className = 'login-toast';
+                t.style.background = 'linear-gradient(135deg, #f5af19, #f12711)';
+                t.innerHTML = 'Upgrade to Premium! \u2B50';
+                t.onclick = function() { t.remove(); openPremium(); };
+                document.body.appendChild(t);
+                setTimeout(function() { if (t.parentNode) t.remove(); }, 4000);
+            }, 2000);
+        }
     }).catch(function(e) { document.getElementById('loginError').textContent = 'Connection error'; });
 }
 
@@ -120,6 +231,49 @@ function doLogout() {
     updateSidebar();
 }
 
+// ===================== PREMIUM =====================
+function isPremium() {
+    return currentUser && currentUser.is_premium;
+}
+
+function openPremium() {
+    if (!currentUser) { openLogin(); return; }
+    if (isPremium()) { 
+        alert('You are already Premium!'); 
+        return; 
+    }
+    document.getElementById('premiumOverlay').classList.add('open');
+}
+
+function closePremium() {
+    document.getElementById('premiumOverlay').classList.remove('open');
+}
+
+function activatePremium() {
+    if (!currentUser) return;
+    fetch(SV + '/api/auth/upgrade-premium', {
+        method: 'POST', headers: authHeaders()
+    }).then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.ok) {
+            currentUser.is_premium = 1;
+            closePremium();
+            updateSidebar();
+            // Show success
+            var t = document.createElement('div');
+            t.className = 'login-toast';
+            t.style.background = 'linear-gradient(135deg, #f5af19, #f12711)';
+            t.textContent = 'Welcome to Premium!';
+            document.body.appendChild(t);
+            setTimeout(function() { if (t.parentNode) t.remove(); }, 3000);
+        }
+    });
+}
+
+function premiumBadgeHTML() {
+    return '<span class="premium-badge">PRO</span>';
+}
+
 function checkAuth() {
     if (!authToken) return;
     fetch(SV + '/api/auth/me', { headers: authHeaders() })
@@ -138,22 +292,47 @@ function updateSidebar() {
     var btn = document.getElementById('sideLoginBtn');
     var hBtn = document.getElementById('headerLoginBtn');
     var bBtn = document.getElementById('bnavProfileBtn');
+    var premBtn = document.getElementById('sidePremiumBtn');
     if (currentUser) {
-        uname.textContent = currentUser.username;
+        if (currentUser.is_premium) {
+            uname.innerHTML = currentUser.username + ' <span class="premium-badge">PRO</span>';
+            uname.className = 'side-uname premium-username';
+        } else {
+            uname.textContent = currentUser.username;
+            uname.className = 'side-uname';
+        }
         fname.textContent = currentUser.email || 'AI Grams User';
+        if (currentUser.is_premium) {
+            fname.innerHTML = '<span class="side-premium-tag">Premium Member</span>';
+        }
         btn.textContent = 'Logout';
         btn.className = 'side-logout-btn';
         btn.onclick = doLogout;
-        if (hBtn) { hBtn.textContent = currentUser.username; hBtn.className = 'header-user-btn'; hBtn.onclick = function(){ switchTab('profiles', bBtn); }; }
+        if (hBtn) {
+            if (currentUser.is_premium) {
+                hBtn.innerHTML = currentUser.username + ' \u2B50';
+                hBtn.className = 'header-user-btn premium-username';
+            } else {
+                hBtn.textContent = currentUser.username;
+                hBtn.className = 'header-user-btn';
+            }
+            hBtn.onclick = function(){ switchTab('profiles', bBtn); };
+        }
         if (bBtn) bBtn.title = 'Profile';
+        // Show/hide premium upgrade button
+        if (premBtn) {
+            premBtn.style.display = currentUser.is_premium ? 'none' : 'block';
+        }
     } else {
         uname.textContent = 'visitor';
+        uname.className = 'side-uname';
         fname.textContent = 'Human Visitor';
         btn.textContent = 'Login';
         btn.className = 'side-login-btn';
         btn.onclick = openLogin;
         if (hBtn) { hBtn.textContent = 'Login'; hBtn.className = 'header-login-btn'; hBtn.onclick = openLogin; }
         if (bBtn) bBtn.title = 'Login';
+        if (premBtn) premBtn.style.display = 'none';
     }
 }
 
@@ -202,13 +381,15 @@ function showSkeletons(count) {
     bar.className = 'scroll-progress';
     bar.innerHTML = '<div class="scroll-progress-bar" id="scrollProgressBar"></div>';
     document.body.appendChild(bar);
-    window.addEventListener('scroll', function() {
-        var pbar = document.getElementById('scrollProgressBar');
-        if (!pbar) return;
+    var _scrollPbar = null;
+    var _updateScrollProgress = throttle(function() {
+        if (!_scrollPbar) _scrollPbar = document.getElementById('scrollProgressBar');
+        if (!_scrollPbar) return;
         var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         var docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        if (docHeight > 0) pbar.style.width = Math.min(100, (scrollTop / docHeight) * 100) + '%';
-    });
+        if (docHeight > 0) _scrollPbar.style.width = Math.min(100, (scrollTop / docHeight) * 100) + '%';
+    }, 16);
+    window.addEventListener('scroll', _updateScrollProgress, {passive: true});
 })();
 
 // ===================== PULL TO REFRESH =====================
@@ -1381,6 +1562,8 @@ function loadFeed() {
                     for (var i=0; i<all.length; i++) html += buildPost(all[i]);
                     document.getElementById('postsContainer').innerHTML = html;
                     _feedBuilt = true;
+                    // Lazy observe new images
+                    setTimeout(function() { lazyObserve(document.getElementById('postsContainer')); }, 100);
                     // Restore expanded comments
                     Object.keys(_expandedComments).forEach(function(pid) {
                         if (_expandedComments[pid]) showAllComments(null, pid);
@@ -1685,9 +1868,11 @@ openNotifs = function() {
 };
 
 // Auto-refresh feed every 30s
-setInterval(function() { if (curTab === 'feed') loadFeed(); }, 90000);
-// Poll notifications every 15s
-setInterval(pollNotifications, 15000);
+setInterval(function() { if (curTab === 'feed' && document.visibilityState === 'visible') loadFeed(); }, 90000);
+// Poll notifications every 20s (only when visible)
+setInterval(function() {
+    if (document.visibilityState === 'visible') pollNotifications();
+}, 20000);
 // Initial poll
 setTimeout(pollNotifications, 3000);
 
@@ -1845,6 +2030,8 @@ function loadMorePosts() {
             var html = '';
             for (var i=0; i<all.length; i++) html += buildPost(all[i]);
             container.insertAdjacentHTML('beforeend', html);
+            // Lazy observe new images
+            setTimeout(function() { lazyObserve(container); }, 100);
             // Add reels to reels data
             for (var i=0; i<reels.length; i++) allReelsData.push(reels[i]);
         })
@@ -1883,9 +2070,11 @@ loadFollowing();
 loadSuggested();
 setTimeout(setupInfiniteScroll, 2000);
 setInterval(function() {
-    loadFeed();
-    setTimeout(observeVideos, 1000);
-}, 60000);
+    if (document.visibilityState === 'visible' && curTab === 'feed') {
+        loadFeed();
+        setTimeout(observeVideos, 1000);
+    }
+}, 120000);
 setTimeout(observeVideos, 2000);
 
 
@@ -2565,3 +2754,14 @@ function submitUpload() {
     });
 })();
 
+// ===================== PERFORMANCE: PRECONNECT CDNs =====================
+(function() {
+    var cdns = ['https://picsum.photos', 'https://cdn.pixabay.com', 'https://images.pexels.com', 'https://assets.mixkit.co'];
+    for (var i = 0; i < cdns.length; i++) {
+        var link = document.createElement('link');
+        link.rel = 'preconnect';
+        link.href = cdns[i];
+        link.crossOrigin = 'anonymous';
+        document.head.appendChild(link);
+    }
+})();

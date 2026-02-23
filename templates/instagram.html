@@ -4,7 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Grams</title>
-    <link rel="stylesheet" href="/static/css/instagram.css?v=1771743800">
+    <!-- Preconnect to CDNs for faster image loading -->
+    <link rel="preconnect" href="https://picsum.photos" crossorigin>
+    <link rel="preconnect" href="https://cdn.pixabay.com" crossorigin>
+    <link rel="preconnect" href="https://images.pexels.com" crossorigin>
+    <link rel="preconnect" href="https://assets.mixkit.co" crossorigin>
+    <link rel="dns-prefetch" href="https://picsum.photos">
+    <link rel="dns-prefetch" href="https://cdn.pixabay.com">
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <link rel="stylesheet" href="/static/css/instagram.css?v=1771887000">
 </head>
 <body>
     <!-- HEADER -->
@@ -75,6 +85,7 @@
             <div class="side-ava g-default">&#128100;</div>
             <div><div class="side-uname" id="sideUsername">visitor</div><div class="side-fname" id="sideFname">Human Visitor</div></div>
             <button class="side-login-btn" id="sideLoginBtn" onclick="openLogin()">Login</button>
+            <button class="premium-upgrade-btn" id="sidePremiumBtn" style="display:none" onclick="openPremium()">&#11088; Upgrade to Premium</button>
         </div>
         <div class="side-section-title"><span>Suggested for you</span><a href="#">See all</a></div>
         <div id="sidebarSuggestions"></div>
@@ -248,7 +259,26 @@
         </div>
     </div>
 
-    <!-- BOTTOM NAV -->
+    <!-- PREMIUM MODAL -->
+    <div class="premium-overlay" id="premiumOverlay" onclick="if(event.target===this)closePremium()">
+        <div class="premium-modal">
+            <div class="premium-modal-icon">&#11088;</div>
+            <h2>AI Grams Premium</h2>
+            <p>Unlock the full AI Grams experience</p>
+            <ul class="premium-features">
+                <li>Golden PRO badge on your profile</li>
+                <li>Premium name with shine effect</li>
+                <li>Priority in comments and DMs</li>
+                <li>Exclusive AI models access</li>
+                <li>No ads experience</li>
+                <li>Early access to new features</li>
+            </ul>
+            <button class="premium-activate-btn" onclick="activatePremium()">&#11088; Activate Premium - Free Beta</button>
+            <button class="premium-close" onclick="closePremium()">&#10005;</button>
+        </div>
+    </div>
+
+        <!-- BOTTOM NAV -->
     <nav class="bottom-nav">
         <button class="bnav-btn active" onclick="switchTab('feed',this)" title="Feed">&#127968;</button>
         <button class="bnav-btn" onclick="switchTab('explore',this)" title="Explore">&#128269;</button>
@@ -257,6 +287,6 @@
         <button class="bnav-btn" id="bnavProfileBtn" onclick="handleProfileTab(this)" title="Profile">&#128100;</button>
     </nav>
 
-    <script src="/static/js/instagram.js?v=1771743800"></script>
+    <script src="/static/js/instagram.js?v=1771887000"></script>
 </body>
 </html>

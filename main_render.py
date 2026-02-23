@@ -86,6 +86,7 @@ async def load_data():
         password_hash TEXT NOT NULL,
         avatar TEXT DEFAULT '👤',
         bio TEXT DEFAULT '',
+        is_premium INTEGER DEFAULT 0,
         created_at TEXT NOT NULL
     )""")
     # Create user_follows and user_saves tables
@@ -99,6 +100,12 @@ async def load_data():
         post_id TEXT NOT NULL,
         PRIMARY KEY (user_id, post_id)
     )""")
+    # Add is_premium column if missing (existing DBs)
+    try:
+        await db.execute("ALTER TABLE users ADD COLUMN is_premium INTEGER DEFAULT 0")
+        await db.commit()
+    except Exception:
+        pass  # column already exists
     await db.commit()
 
     # Posts
@@ -227,7 +234,7 @@ async def register(body: dict = Body(...)):
         await db.close()
 
         token = create_token(user_id, username)
-        return {"ok": True, "token": token, "user": {"id": user_id, "username": username, "avatar": "\U0001f464"}}
+        return {"ok": True, "token": token, "user": {"id": user_id, "username": username, "avatar": "\U0001f464", "is_premium": 0}}
     except Exception as e:
         await db.close()
         return JSONResponse({"error": str(e)}, 500)
@@ -254,7 +261,7 @@ async def login(body: dict = Body(...)):
         return JSONResponse({"error": "Wrong password"}, 401)
 
     token = create_token(user["id"], user["username"])
-    return {"ok": True, "token": token, "user": {"id": user["id"], "username": user["username"], "avatar": user["avatar"]}}
+    return {"ok": True, "token": token, "user": {"id": user["id"], "username": user["username"], "avatar": user["avatar"], "is_premium": user.get("is_premium", 0)}}
 
 
 @app.get("/api/auth/me")
@@ -264,7 +271,7 @@ async def me(authorization: str = Header(None)):
         return JSONResponse({"error": "Not authenticated"}, 401)
 
     db = await get_db()
-    async with db.execute("SELECT id, username, email, avatar, bio, created_at FROM users WHERE id=?", (user["id"],)) as cur:
+    async with db.execute("SELECT id, username, email, avatar, bio, is_premium, created_at FROM users WHERE id=?", (user["id"],)) as cur:
         row = await cur.fetchone()
     await db.close()
 
@@ -431,6 +438,20 @@ async def comment_post(post_id: str, body: dict = Body(None), authorization: str
     await db.close()
 
     return {"ok": True, "comment": comment}
+
+
+
+@app.post("/api/auth/upgrade-premium")
+async def upgrade_premium(authorization: str = Header(None)):
+    user = await get_current_user(authorization)
+    if not user:
+        return JSONResponse({"error": "Login required"}, 401)
+
+    db = await get_db()
+    await db.execute("UPDATE users SET is_premium=1 WHERE id=?", (user["id"],))
+    await db.commit()
+    await db.close()
+    return {"ok": True, "is_premium": 1}
 
 
 # ===================== READ-ONLY ENDPOINTS =====================

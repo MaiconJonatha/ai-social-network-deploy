@@ -1756,3 +1756,500 @@ html { scroll-behavior: smooth; }
     font-size: 10px; padding: 2px 8px; border-radius: 10px;
     font-weight: 600;
 }
+
+/* ===================== V2 VISUAL/UI IMPROVEMENTS ===================== */
+
+/* --- SMOOTH THEME TRANSITION --- */
+body, .ig-header, .bottom-nav, .ig-post, .panel, .ig-sidebar,
+.login-overlay, .upload-overlay, .edit-overlay {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* --- ENHANCED HEADER --- */
+.ig-header {
+    background: var(--bg);
+    border-bottom: none;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+}
+.dark .ig-header { box-shadow: 0 1px 8px rgba(0,0,0,0.3); }
+
+/* --- ANIMATED ACTIVE TAB INDICATOR --- */
+.bottom-nav {
+    box-shadow: 0 -1px 8px rgba(0,0,0,0.04);
+    border-top: none;
+}
+.dark .bottom-nav { box-shadow: 0 -1px 8px rgba(0,0,0,0.2); }
+.bnav-btn {
+    position: relative;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bnav-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 2px; left: 50%; transform: translateX(-50%);
+    width: 20px; height: 3px;
+    border-radius: 3px;
+    background: var(--gradient);
+    animation: tabPillIn 0.25s ease;
+}
+@keyframes tabPillIn {
+    from { width: 0; opacity: 0; }
+    to { width: 20px; opacity: 1; }
+}
+
+/* --- IMPROVED POST CARD SHADOW --- */
+@media (min-width: 640px) {
+    .ig-post {
+        border-radius: 14px;
+        border: 1px solid rgba(0,0,0,0.06);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .dark .ig-post {
+        border: 1px solid rgba(255,255,255,0.06);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+    .ig-post:hover {
+        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        transform: translateY(-1px);
+    }
+    .dark .ig-post:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+}
+
+/* --- BETTER AVATAR RINGS --- */
+.post-ava {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 2px solid transparent;
+    background-image: linear-gradient(var(--card), var(--card)), var(--gradient);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+}
+.post-ava:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(225,48,108,0.2); }
+
+/* --- STORY BAR FADE EDGES --- */
+.stories-bar {
+    position: relative;
+}
+.stories-bar::before, .stories-bar::after {
+    content: '';
+    position: absolute; top: 0; bottom: 0; width: 32px;
+    z-index: 2; pointer-events: none;
+}
+.stories-bar::before { left: 0; background: linear-gradient(to right, var(--bg), transparent); }
+.stories-bar::after { right: 0; background: linear-gradient(to left, var(--bg), transparent); }
+
+/* --- SMOOTHER LIKE ANIMATION --- */
+@keyframes likeExplosion {
+    0% { transform: scale(1); }
+    15% { transform: scale(1.35); }
+    30% { transform: scale(0.9); }
+    45% { transform: scale(1.15); }
+    60% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+.post-act.hearted {
+    animation: likeExplosion 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: var(--red);
+}
+
+/* --- FLOATING PARTICLES ON DOUBLE TAP --- */
+@keyframes floatUp {
+    0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+    50% { opacity: 1; }
+    100% { transform: translate(-50%, -200%) scale(1.5); opacity: 0; }
+}
+
+/* --- BETTER SAVE BUTTON --- */
+.post-act-save.saved {
+    color: var(--text);
+    transform: scale(1.1);
+}
+
+/* --- NOTIFICATION TOAST GLOW --- */
+.notif-toast {
+    border: 1px solid rgba(0,149,246,0.2);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+.notif-toast.show {
+    box-shadow: 0 8px 32px rgba(0,149,246,0.15), 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* --- SIDEBAR GLASS EFFECT --- */
+@supports (backdrop-filter: blur(20px)) {
+    .ig-sidebar {
+        background: rgba(var(--bg-rgb, 255,255,255), 0.6);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        border-radius: 16px;
+        padding: 16px;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    .dark .ig-sidebar {
+        background: rgba(18,18,18,0.6);
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+}
+
+/* --- BETTER DM PANEL --- */
+.panel {
+    box-shadow: -4px 0 30px rgba(0,0,0,0.15);
+}
+.panel-header {
+    border-bottom: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+/* --- EXPLORE GRID HOVER --- */
+.explore-item {
+    border-radius: 4px;
+    overflow: hidden;
+}
+.explore-item img, .explore-item video {
+    transition: transform 0.4s ease;
+}
+.explore-item:hover img, .explore-item:hover video {
+    transform: scale(1.05);
+}
+
+/* --- PROFILE PAGE AVATAR GLOW --- */
+.profile-page-ava, .profile-ava {
+    box-shadow: 0 4px 20px rgba(225,48,108,0.15);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.profile-page-ava:hover, .profile-ava:hover {
+    box-shadow: 0 6px 30px rgba(225,48,108,0.25);
+    transform: scale(1.02);
+}
+
+/* --- PROFILE CARD GRADIENT SHIMMER --- */
+.profile-card-banner {
+    position: relative;
+    overflow: hidden;
+}
+.profile-card-banner::before {
+    content: '';
+    position: absolute; top: 0; left: -100%; width: 200%; height: 100%;
+    background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%);
+    transition: none;
+}
+.profile-card:hover .profile-card-banner::before {
+    animation: cardShimmer 1.2s ease;
+}
+@keyframes cardShimmer {
+    from { transform: translateX(-50%); }
+    to { transform: translateX(50%); }
+}
+
+/* --- LOGIN MODAL GLOW --- */
+.login-modal {
+    border: 1px solid rgba(0,149,246,0.1);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 60px rgba(0,149,246,0.08);
+}
+
+/* --- BETTER SCROLL PROGRESS --- */
+.scroll-progress {
+    height: 3px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.02), transparent);
+}
+.scroll-progress-bar {
+    background: var(--gradient);
+    border-radius: 0 2px 2px 0;
+    box-shadow: 2px 0 6px rgba(225,48,108,0.3);
+}
+
+/* --- STORY VIEWER IMPROVEMENTS --- */
+.story-viewer {
+    border-radius: 20px;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+}
+
+/* --- REEL VIEWER GLASS OVERLAY --- */
+.reel-overlay-right .reel-action div {
+    background: rgba(255,255,255,0.1);
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.2s;
+}
+.reel-overlay-right .reel-action:hover div {
+    background: rgba(255,255,255,0.2);
+}
+
+/* --- SMOOTH SECTION TRANSITIONS --- */
+#feedSection, #reelsSection, #exploreSection, #profilesSection, #profilePageSection {
+    animation: sectionFadeIn 0.3s ease;
+}
+@keyframes sectionFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- BETTER EMPTY STATE --- */
+.ig-empty {
+    padding: 80px 20px;
+}
+.ig-empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    animation: emptyBounce 2s ease infinite;
+}
+@keyframes emptyBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* ===================== V2 PERFORMANCE CSS ===================== */
+
+/* --- CSS CONTAINMENT for better rendering --- */
+.ig-post {
+    contain: layout style;
+}
+.post-media {
+    contain: layout style paint;
+}
+.explore-item, .reel-thumb, .pp-grid-item, .profile-grid-item {
+    contain: layout style paint;
+}
+.stories-bar .story-item {
+    contain: layout style;
+}
+
+/* --- GPU ACCELERATION for smooth animations --- */
+.carousel-track,
+.story-viewer,
+.reels-viewer-scroll,
+.panel,
+.ig-header,
+.bottom-nav {
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+/* --- REDUCE REPAINTS on scrolling elements --- */
+.stories-bar,
+.reels-viewer-scroll,
+.pp-highlights,
+.profile-highlights {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+
+/* --- OPTIMIZED IMAGES --- */
+.post-media img,
+.explore-item img,
+.pp-grid-item img,
+.profile-grid-item img,
+.reel-thumb img {
+    content-visibility: auto;
+    contain-intrinsic-size: 300px 300px;
+}
+
+/* --- REDUCE ANIMATION on low-power devices --- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .scroll-progress-bar { transition: none; }
+    .ig-post { animation: none; }
+    .skeleton-shimmer { animation: none; }
+    .story-ring { animation: none; }
+}
+
+/* --- PRECONNECT HINTS (via link prefetch handled in HTML) --- */
+
+/* --- TOUCH OPTIMIZATION for mobile --- */
+@media (hover: none) and (pointer: coarse) {
+    .explore-item:hover img, .explore-item:hover video { transform: none; }
+    .ig-post:hover { transform: none; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+    .profile-card:hover { transform: none; }
+    .post-ava:hover { transform: none; }
+}
+
+/* --- FONT DISPLAY OPTIMIZATION --- */
+@font-face {
+    font-family: 'Segoe Script';
+    font-display: swap;
+}
+
+
+/* ===================== PREMIUM SYSTEM ===================== */
+
+/* Premium badge */
+.premium-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: linear-gradient(135deg, #f5af19, #f12711);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    vertical-align: middle;
+    margin-left: 4px;
+    line-height: 1.4;
+}
+.premium-badge::before {
+    content: '\2B50';
+    font-size: 9px;
+}
+
+/* Premium username glow */
+.premium-username {
+    background: linear-gradient(90deg, #f5af19, #f12711, #f5af19);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: premiumShine 3s linear infinite;
+    font-weight: 700;
+}
+@keyframes premiumShine {
+    to { background-position: 200% center; }
+}
+
+/* Premium avatar ring */
+.premium-ava-ring {
+    border: 2px solid transparent;
+    background-image: linear-gradient(var(--bg), var(--bg)), linear-gradient(135deg, #f5af19, #f12711, #f5af19);
+    background-origin: border-box;
+    background-clip: content-box, border-box;
+    border-radius: 50%;
+}
+
+/* Premium sidebar indicator */
+.side-premium-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #f5af19, #f12711);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-top: 2px;
+}
+
+/* Premium upgrade button */
+.premium-upgrade-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    background: linear-gradient(135deg, #f5af19, #f12711);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: opacity 0.2s;
+}
+.premium-upgrade-btn:hover { opacity: 0.9; }
+
+/* Premium modal */
+.premium-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+.premium-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+.premium-modal {
+    background: var(--bg);
+    border-radius: 16px;
+    padding: 32px 24px;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.premium-modal-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+.premium-modal h2 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    background: linear-gradient(135deg, #f5af19, #f12711);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.premium-modal p {
+    color: var(--text2);
+    font-size: 13px;
+    margin: 0 0 16px;
+    line-height: 1.5;
+}
+.premium-features {
+    text-align: left;
+    margin: 0 0 20px;
+    padding: 0;
+    list-style: none;
+}
+.premium-features li {
+    padding: 8px 0;
+    font-size: 13px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.premium-features li::before {
+    content: '\2713';
+    color: #f5af19;
+    font-weight: 700;
+    font-size: 14px;
+}
+.premium-activate-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #f5af19, #f12711);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.premium-activate-btn:hover { transform: scale(1.02); }
+.premium-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text2);
+    cursor: pointer;
+}
+
+/* Header premium star */
+.header-premium-star {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    filter: drop-shadow(0 0 4px rgba(245,175,25,0.5));
+}
