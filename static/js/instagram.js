@@ -1012,10 +1012,14 @@ function openProfile(agId) {
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (d.error) { document.getElementById('profilePageContent').innerHTML = '<div class="ig-empty">Profile not found</div>'; return; }
-            var ag = d.agente || {};
-            var posts = d.posts || [];
-            var reels = d.reels || [];
-            var saved = d.saved || [];
+            var ag = d.agente || d;
+            var posts = d.posts || ag.posts || [];
+            var reels = (d.reels || []);
+            var saved = (d.saved || []);
+            // Separate reels from posts
+            if (reels.length === 0 && posts.length > 0) {
+                reels = posts.filter(function(p) { return p.tipo === 'reel'; });
+            }
             var c = ia(ag.nome || '');
             var isFollowing = followingList.indexOf(agId) !== -1;
             var uname = ag.username || c.h || agId;
@@ -1026,7 +1030,7 @@ function openProfile(agId) {
             } else {
                 profAvaHtml = ava(c);
             }
-            var totalPosts = ag.total_posts || (posts.length + reels.length);
+            var totalPosts = ag.posts_count || ag.total_posts || posts.length;
             // Build full-page profile HTML (like real Instagram)
             var html = '<div class="profile-page-top">';
             // Desktop layout: avatar left, info right
@@ -1899,7 +1903,12 @@ function loadProfiles() {
     fetch(SV + '/api/instagram/agentes')
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            allAgentes = d.agentes || {};
+            var list = d.agentes || [];
+            allAgentes = {};
+            for (var i = 0; i < list.length; i++) {
+                var a = list[i];
+                allAgentes[a.id || ('agent_' + i)] = a;
+            }
             console.log('[Profiles] Loaded ' + Object.keys(allAgentes).length + ' agentes');
             renderProfiles();
         }).catch(function(e){
@@ -1924,12 +1933,12 @@ function renderProfiles() {
         } else {
             avaHtml = emojiAva;
         }
-        html += '<div class="profile-card" onclick="openProfile(\'' + k + '\')">' +
+        html += '<div class="profile-card" onclick="openProfile(\'' + (ag.id || k) + '\')">' +
             '<div class="profile-card-banner" style="background:linear-gradient(135deg,' + (ag.cor || '#667eea') + ',' + (ag.cor || '#667eea') + '99)">' +
                 '<div class="profile-card-banner-pattern"></div>' +
             '</div>' +
             '<div class="profile-card-body">' +
-                '<button class="profile-card-edit" onclick="event.stopPropagation();openEdit(\'' + k + '\')" title="Edit">&#9881;</button>' +
+                '<button class="profile-card-edit" onclick="event.stopPropagation();openEdit(\'' + (ag.id || k) + '\')" title="Edit">&#9881;</button>' +
                 '<div class="profile-card-ava" style="background:' + corBg + '">' + avaHtml + '</div>' +
                 '<div class="profile-card-name">' + (ag.nome || k) + '</div>' +
                 '<div class="profile-card-user">@' + (ag.username || k) + '</div>' +
@@ -1939,7 +1948,7 @@ function renderProfiles() {
                     (ag.img_generator && ag.img_generator !== 'auto' ? '<span class="profile-tech-badge img-gen">' + ag.img_generator + '</span>' : '') +
                     (ag.vid_generator && ag.vid_generator !== 'auto' ? '<span class="profile-tech-badge vid-gen">' + ag.vid_generator + '</span>' : '') +
                 '</div>' +
-                '<div class="profile-card-stats"><span><b>' + (ag.seguidores || 0) + '</b> followers</span><span><b>' + (ag.seguindo || 0) + '</b> following</span></div>' +
+                '<div class="profile-card-stats"><span><b>' + (ag.posts_count || 0) + '</b> posts</span><span><b>' + fn(ag.seguidores || 0) + '</b> followers</span><span><b>' + (ag.seguindo || 0) + '</b> following</span></div>' +
             '</div>' +
         '</div>';
     }
