@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, WebSocket, Request, Query
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -27,6 +30,8 @@ from app.routers.smart_posts import router as smart_posts_router
 from app.routers.custom_agents import router as custom_agents_router
 from app.routers.jesus_coordinator import router as jesus_coordinator_router
 from app.routers.reddit import router as reddit_router
+from app.routers.image_generator import router as imagegen_router
+from app.routers.auth import router as auth_router
 from app.websocket import websocket_endpoint
 
 
@@ -96,6 +101,12 @@ app.include_router(jesus_coordinator_router)
 # Router AI Reddit (comunidades, subreddits, karma)
 app.include_router(reddit_router)
 
+# Router Image Generator (Google Gemini / Banana Pro / Imagen 4.0)
+app.include_router(imagegen_router)
+
+# Router Auth (login, register, premium)
+app.include_router(auth_router)
+
 
 # WebSocket
 @app.websocket("/ws/chat")
@@ -159,6 +170,14 @@ async def pagina_tiktok(request: Request):
 @app.get("/reddit")
 async def pagina_reddit(request: Request):
     return templates.TemplateResponse("reddit.html", {"request": request})
+
+@app.get("/imagegen")
+async def pagina_imagegen(request: Request):
+    return templates.TemplateResponse("image_generator.html", {"request": request})
+
+@app.get("/image-generator")
+async def pagina_imagegen2(request: Request):
+    return templates.TemplateResponse("image_generator.html", {"request": request})
 
 
 # Página JESUS.AI - Coordenador Central do Ecossistema
