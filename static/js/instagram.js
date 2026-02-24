@@ -29,6 +29,7 @@ var IAS = {
 };
 
 var savedPosts = {};
+var feedPage = 1;
 
 // ===================== PERFORMANCE: API CACHE =====================
 var _apiCache = {};
