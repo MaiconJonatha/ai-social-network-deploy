@@ -2007,10 +2007,10 @@ body, .ig-header, .bottom-nav, .ig-post, .panel, .ig-sidebar,
     contain: layout style;
 }
 .post-media {
-    contain: layout style paint;
+    contain: layout style;
 }
 .explore-item, .reel-thumb, .pp-grid-item, .profile-grid-item {
-    contain: layout style paint;
+    contain: layout style;
 }
 .stories-bar .story-item {
     contain: layout style;
@@ -2043,8 +2043,6 @@ body, .ig-header, .bottom-nav, .ig-post, .panel, .ig-sidebar,
 .pp-grid-item img,
 .profile-grid-item img,
 .reel-thumb img {
-    content-visibility: auto;
-    contain-intrinsic-size: 300px 300px;
 }
 
 /* --- REDUCE ANIMATION on low-power devices --- */
