@@ -20,6 +20,108 @@ from fastapi import APIRouter, UploadFile, File, Form, Request
 from fastapi.responses import JSONResponse
 from app.routers import instagram_db as _igdb
 
+# HuggingFace Free Spaces (GRATIS, sem API key, sem limites)
+HF_IMAGE_SPACE = "mrfakename/Z-Image-Turbo"  # FLUX-based, ~8s por imagem
+HF_VIDEO_SPACE = "alexnasa/ltx-2-TURBO"  # Text-to-video FAST, ~60s
+
+def _gerar_imagem_hf_sync(prompt, agente_id):
+    """Gera imagem via Z Image Turbo (FLUX) - sync wrapper para thread"""
+    from gradio_client import Client
+    import shutil
+    client = Client(HF_IMAGE_SPACE, verbose=False)
+    result = client.predict(
+        prompt=prompt[:500],
+        height=768,
+        width=1024,
+        num_inference_steps=9,
+        seed=42,
+        randomize_seed=True,
+        api_name="/generate_image"
+    )
+    if isinstance(result, tuple) and result[0]:
+        src = str(result[0])
+        if _os.path.isfile(src):
+            img_dir = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(__file__))), "static", "ig_images")
+            _os.makedirs(img_dir, exist_ok=True)
+            fname = f"hf_{uuid.uuid4().hex[:10]}.png"
+            dest = _os.path.join(img_dir, fname)
+            shutil.copy2(src, dest)
+            return f"/static/ig_images/{fname}"
+    return None
+
+async def _gerar_imagem_hf(prompt_img, agente_id):
+    """Gera imagem via HuggingFace Z Image Turbo (GRATIS, ~8s)"""
+    estilo = ESTILOS_IMAGEM.get(agente_id, "ultra detailed, cinematic lighting, masterpiece")
+    full_prompt = f"{prompt_img}, {estilo}, high quality, 4K"
+    full_prompt = re.sub(r'[^a-zA-Z0-9\s,.]', '', full_prompt)[:500]
+    try:
+        url = await asyncio.to_thread(_gerar_imagem_hf_sync, full_prompt, agente_id)
+        if url:
+            print(f"[HF-Image] OK: {url}")
+            return url
+    except Exception as e:
+        print(f"[HF-Image] Error: {e}")
+    return None
+
+def _gerar_video_hf_sync(prompt):
+    """Gera video via LTX-2 Turbo (text-to-video FAST ~60s) - sync wrapper"""
+    from gradio_client import Client
+    import shutil
+    client = Client(HF_VIDEO_SPACE, verbose=False)
+    result = client.predict(
+        first_frame=None,
+        end_frame=None,
+        prompt=prompt[:500],
+        duration=3.0,
+        input_video=None,
+        generation_mode="Text-to-Video",
+        enhance_prompt=True,
+        seed=10,
+        randomize_seed=True,
+        height=512,
+        width=768,
+        camera_lora="No LoRA",
+        audio_path=None,
+        api_name="/generate_video"
+    )
+    vid_path = None
+    if isinstance(result, str) and _os.path.isfile(result):
+        vid_path = result
+    elif isinstance(result, dict):
+        vd = result.get("video", result)
+        vid_path = vd.get("path", "") if isinstance(vd, dict) else ""
+    elif isinstance(result, tuple) and result:
+        for item in result:
+            if isinstance(item, str) and _os.path.isfile(str(item)):
+                vid_path = item
+                break
+            elif isinstance(item, dict) and "video" in item:
+                vid_path = item["video"].get("path", "")
+                break
+    if vid_path and _os.path.isfile(str(vid_path)):
+        vid_dir = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(__file__))), "static", "ig_videos")
+        _os.makedirs(vid_dir, exist_ok=True)
+        fname = f"hf_{uuid.uuid4().hex[:10]}.mp4"
+        dest = _os.path.join(vid_dir, fname)
+        shutil.copy2(str(vid_path), dest)
+        return f"/static/ig_videos/{fname}"
+    return None
+
+async def _gerar_video_hf(prompt_img, agente_id):
+    """Gera video via HuggingFace Wan 2.2 5B (GRATIS, ~2-5min)"""
+    estilo = ESTILOS_IMAGEM.get(agente_id, "cinematic lighting, smooth animation")
+    full_prompt = f"{prompt_img}, {estilo}, cinematic motion, masterpiece quality"
+    full_prompt = re.sub(r'[^a-zA-Z0-9\s,.]', '', full_prompt)[:500]
+    try:
+        url = await asyncio.to_thread(_gerar_video_hf_sync, full_prompt)
+        if url:
+            print(f"[HF-Video] OK: {url}")
+            return None, url
+    except Exception as e:
+        print(f"[HF-Video] Error: {e}")
+    return None, None
+
+
 PERSIST_FILE = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(__file__))), "instagram_data.json")
 
 # Leonardo.ai API config
@@ -82,7 +184,7 @@ SILICONFLOW_API_KEY = _os.environ.get("SILICONFLOW_API_KEY", "")
 SILICONFLOW_API_BASE = "https://api.siliconflow.com/v1"
 SILICONFLOW_IMG_MODEL = "black-forest-labs/FLUX.1-schnell"  # Rapido e barato
 SILICONFLOW_VID_MODEL = "Wan-AI/Wan2.2-T2V-A14B"  # Text-to-video
-SILICONFLOW_ENABLED = False  # sem saldo (30001)
+SILICONFLOW_ENABLED = True  # auto-detect (cascade handles failures)
 
 
 # OpenRouter API (imagens via Gemini Flash Image + texto)
@@ -1456,8 +1558,17 @@ async def _gerar_imagem_bing(prompt_img, agente_id):
         return None
 
 async def _construir_url_imagem_ai(prompt_img, agente_id, seed_id):
-    """Gera imagem: OpenRouter Gemini -> Google Gemini -> SiliconFlow -> fal.ai -> Together -> Kling -> MiniMax -> Leonardo -> DALL-E -> Local"""
-    # 1. Google Gemini Flash Image (PRINCIPAL - rapido e gratis)
+    """Gera imagem: DeepInfra (FREE) -> Google Gemini -> OpenRouter -> SiliconFlow -> fal.ai -> Together -> Kling -> MiniMax -> Leonardo -> DALL-E -> Local"""
+    # 0. DeepInfra SD3.5 (GRATIS, sem API key, ~5s, PRINCIPAL)
+    try:
+        di_url = await _gerar_imagem_deepinfra(prompt_img, agente_id)
+        if di_url:
+            print(f"[IG-Img] DeepInfra OK: {di_url[:80]}")
+            return di_url, "DeepInfra SD3.5"
+    except Exception as e:
+        print(f"[IG-Img] DeepInfra erro: {e}")
+    print(f"[IG-Img] DeepInfra falhou, tentando Google Gemini...")
+    # 1. Google Gemini Flash Image (gratis mas quota limitada)
     try:
         google_url = await _gerar_imagem_google(prompt_img, agente_id)
         if google_url:
@@ -1557,7 +1668,15 @@ async def _construir_url_imagem_ai(prompt_img, agente_id, seed_id):
             return dalle_url, "DALL-E 3"
     except Exception as e:
         print(f"[IG-Img] DALL-E erro: {e}")
-    # 11. FALLBACK INTERNET: buscar imagem gratuita na internet
+    # 11. HuggingFace Z Image Turbo (GRATIS, sem limites, ~8s)
+    try:
+        hf_url = await _gerar_imagem_hf(prompt_img, agente_id)
+        if hf_url:
+            print(f"[IG-Img] HuggingFace FLUX OK: {hf_url}")
+            return hf_url, "HuggingFace FLUX"
+    except Exception as e:
+        print(f"[IG-Img] HuggingFace erro: {e}")
+    # 12. FALLBACK INTERNET: buscar imagem gratuita na internet
     try:
         inet_url, inet_gen = await _buscar_imagem_internet(prompt_img, agente_id, seed_id)
         if inet_url:
@@ -3613,22 +3732,65 @@ async def _buscar_video_pexels(tema="technology"):
     return None, None, None
 
 async def _buscar_video_real(tema="tech"):
-    """Try all free video sources: Local YT Clips -> Pixabay -> Pexels"""
-    # 0. Local YouTube clips (50% chance - mix with API videos)
+    """Try AI video generators first, then stock: HF Wan2.2 -> Google Veo -> Leonardo -> SiliconFlow -> Pixabay -> Pexels -> Local"""
+    ai_prompt = random.choice(TEMAS_REELS)
+    agente_id = random.choice(list(AGENTES_IG.keys()))
+    
+    # 1. HuggingFace Wan 2.2 5B (GRATIS, sem limites!)
+    if random.random() < 0.5:  # 50% chance de tentar AI video
+        try:
+            thumb_hf, vid_hf = await _gerar_video_hf(ai_prompt, agente_id)
+            if vid_hf:
+                print(f"[Video-Cascade] HuggingFace Wan 2.2 OK!")
+                return thumb_hf, vid_hf, "HuggingFace Wan 2.2"
+        except Exception as e:
+            print(f"[Video-Cascade] HF error: {e}")
+    
+    # 2. Google Veo (se tiver creditos)
+    if GOOGLE_VEO_ENABLED and GOOGLE_API_KEY:
+        try:
+            thumb_g, vid_g = await _gerar_video_google(ai_prompt, agente_id)
+            if vid_g:
+                print(f"[Video-Cascade] Google Veo OK!")
+                return thumb_g, vid_g, "Google Veo"
+        except Exception as e:
+            print(f"[Video-Cascade] Google Veo error: {e}")
+    
+    # 3. Leonardo (se tiver tokens)
+    if LEONARDO_ENABLED and LEONARDO_API_KEY:
+        try:
+            thumb_l, vid_l = await _gerar_video_leonardo(ai_prompt, agente_id)
+            if vid_l:
+                print(f"[Video-Cascade] Leonardo OK!")
+                return thumb_l, vid_l, "Leonardo AI"
+        except Exception as e:
+            print(f"[Video-Cascade] Leonardo error: {e}")
+    
+    # 4. SiliconFlow Wan2.2 (se tiver saldo)
+    if SILICONFLOW_ENABLED and SILICONFLOW_API_KEY:
+        try:
+            thumb_sf, vid_sf = await _gerar_video_siliconflow(ai_prompt, agente_id)
+            if vid_sf:
+                print(f"[Video-Cascade] SiliconFlow OK!")
+                return thumb_sf, vid_sf, "SiliconFlow Wan2.2"
+        except Exception as e:
+            print(f"[Video-Cascade] SiliconFlow error: {e}")
+    
+    # 5. Local YouTube clips
     if LOCAL_YT_CLIPS and random.random() < 0.5:
         clip = random.choice(LOCAL_YT_CLIPS)
         print(f"[Local-YT-Clip] Using: {clip['file']} ({clip['desc']})")
         return clip["thumb"], clip["file"], "Local Future City"
-    # 1. Pixabay Video
+    # 6. Pixabay Video
     thumb, vid, gen = await _buscar_video_pixabay(tema)
     if vid:
         return thumb, vid, gen
-    # 2. Pexels Video  
+    # 7. Pexels Video  
     pexels_query = random.choice(PEXELS_VIDEO_QUERIES)
     thumb2, vid2, gen2 = await _buscar_video_pexels(pexels_query)
     if vid2:
         return thumb2, vid2, gen2
-    # 3. Fallback to local clips
+    # 8. Fallback to local clips
     if LOCAL_YT_CLIPS:
         clip = random.choice(LOCAL_YT_CLIPS)
         return clip["thumb"], clip["file"], "Local Future City"
@@ -5120,3 +5282,70 @@ async def ig_delete_orphan_images():
                         _os.remove(fpath)
                         deleted += 1
     return {"ok": True, "deleted_orphans": deleted}
+
+
+# ===================== DEEPINFRA IMAGE GENERATION (FREE, NO API KEY) =====================
+async def _gerar_imagem_deepinfra(prompt_img, agente_id):
+    """Gera imagem via DeepInfra (GRATIS, sem API key, SD3.5, rapido ~5s)"""
+    import base64 as _b64
+    estilo = ESTILOS_IMAGEM.get(agente_id, "ultra detailed, high quality, cinematic lighting")
+    full_prompt = f"{prompt_img}, {estilo}, masterpiece quality, ultra detailed, professional photography, cinematic composition"[:500]
+    negative = "blurry, low quality, bad anatomy, watermark, text, signature, human face, human body, deformed, ugly, duplicate, nsfw"
+    
+    models_to_try = [
+        "stabilityai/sd3.5",
+        "stabilityai/sdxl-turbo",
+        "black-forest-labs/FLUX-1-schnell",
+    ]
+    
+    img_dir = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(__file__))), "static", "ig_images")
+    _os.makedirs(img_dir, exist_ok=True)
+    
+    for model in models_to_try:
+        try:
+            async with httpx.AsyncClient(timeout=45.0) as client:
+                resp = await client.post(
+                    "https://api.deepinfra.com/v1/openai/images/generations",
+                    headers={"Content-Type": "application/json"},
+                    json={
+                        "prompt": full_prompt,
+                        "model": model,
+                        "size": "1024x1024",
+                        "n": 1,
+                        "response_format": "b64_json"
+                    }
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    items = data.get("data", [])
+                    if items:
+                        b64 = items[0].get("b64_json", "")
+                        url = items[0].get("url", "")
+                        
+                        if b64:
+                            img_bytes = _b64.b64decode(b64)
+                            if len(img_bytes) > 5000:
+                                fname = f"di_{agente_id}_{uuid.uuid4().hex[:8]}.jpg"
+                                fpath = _os.path.join(img_dir, fname)
+                                with open(fpath, "wb") as f:
+                                    f.write(img_bytes)
+                                local_url = f"/static/ig_images/{fname}"
+                                print(f"[DeepInfra] OK: {local_url} ({len(img_bytes)//1024}KB) model={model}")
+                                return local_url
+                        elif url:
+                            img_resp = await client.get(url, follow_redirects=True, timeout=30)
+                            if img_resp.status_code == 200 and len(img_resp.content) > 5000:
+                                fname = f"di_{agente_id}_{uuid.uuid4().hex[:8]}.jpg"
+                                fpath = _os.path.join(img_dir, fname)
+                                with open(fpath, "wb") as f:
+                                    f.write(img_resp.content)
+                                local_url = f"/static/ig_images/{fname}"
+                                print(f"[DeepInfra] OK (url): {local_url} ({len(img_resp.content)//1024}KB) model={model}")
+                                return local_url
+                else:
+                    print(f"[DeepInfra] HTTP {resp.status_code} model={model}: {resp.text[:100]}")
+        except Exception as e:
+            print(f"[DeepInfra] Error model={model}: {e}")
+    
+    print("[DeepInfra] All models failed")
+    return None
