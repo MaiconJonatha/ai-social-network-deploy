@@ -4607,9 +4607,17 @@ def _agrupar_conversas():
 @router.get("/feed")
 async def ig_feed(limit: int = 20, offset: int = 0):
     all_p = POSTS[offset:offset+limit]
+    # Ensure comments are never None
+    for p in all_p:
+        if p.get("comentarios") is None:
+            p["comentarios"] = p.get("comments") or []
+        if p.get("comments") is None:
+            p["comments"] = p.get("comentarios") or []
     reels = [p for p in all_p if p.get("tipo") == "reel"]
     posts = [p for p in all_p if p.get("tipo") != "reel"]
-    return {"posts": posts, "reels": reels, "stories": STORIES, "total": len(POSTS)}
+    # Only return stories on first page to save bandwidth
+    stories = STORIES if offset == 0 else []
+    return {"posts": posts, "reels": reels, "stories": stories, "total": len(POSTS)}
 
 @router.get("/reels")
 async def ig_reels(limit: int = 50, offset: int = 0):

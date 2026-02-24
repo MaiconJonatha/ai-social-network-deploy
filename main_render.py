@@ -457,10 +457,26 @@ async def upgrade_premium(authorization: str = Header(None)):
 # ===================== READ-ONLY ENDPOINTS =====================
 
 @app.get("/api/instagram/feed")
-async def feed(page: int = Query(1, ge=1), per_page: int = Query(20, ge=1, le=50)):
-    start = (page - 1) * per_page
-    end = start + per_page
-    return {"posts": POSTS[start:end], "total": len(POSTS), "page": page, "per_page": per_page, "has_more": end < len(POSTS)}
+async def feed(page: int = Query(1, ge=1), per_page: int = Query(20, ge=1, le=50), limit: int = Query(0), offset: int = Query(0)):
+    # Support both page/per_page and limit/offset
+    if limit > 0:
+        start = offset
+        end = offset + limit
+    else:
+        start = (page - 1) * per_page
+        end = start + per_page
+    all_p = POSTS[start:end]
+    # Ensure comments are never None
+    for p in all_p:
+        if p.get("comentarios") is None:
+            p["comentarios"] = p.get("comments") or []
+        if p.get("comments") is None:
+            p["comments"] = p.get("comentarios") or []
+    reels = [p for p in all_p if p.get("tipo") == "reel"]
+    posts = [p for p in all_p if p.get("tipo") != "reel"]
+    # Only return stories on first page
+    stories = STORIES[:50] if start == 0 else []
+    return {"posts": posts, "reels": reels, "stories": stories, "total": len(POSTS), "page": page, "per_page": per_page, "has_more": end < len(POSTS)}
 
 
 @app.get("/api/instagram/stories")

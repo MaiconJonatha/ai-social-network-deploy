@@ -538,6 +538,7 @@ function buildPost(p) {
     var shortCap = caption.length > 120 ? caption.substring(0,120) : caption;
     var needMore = caption.length > 120;
     var comms = (p.comentarios || p.comments || []);
+    if (!Array.isArray(comms)) comms = [];
     var totalComms = comms.length;
     var showComms = comms.slice(-2);
     var commHtml = '';
@@ -620,6 +621,7 @@ function showAllComments(el, pid) {
     var post = allPostsData[pid];
     if (!post) return;
     var comms = post.comentarios || post.comments || [];
+    if (!Array.isArray(comms)) comms = [];
     var area = document.getElementById('comments-' + pid);
     if (!area) return;
     var html = '';
@@ -1527,7 +1529,7 @@ var _allFeedPosts = [];
 function loadFeed() {
     if (feedPage === 1) showSkeletons(3);
 
-    fetch(SV + '/api/instagram/feed?limit=50')
+    return fetch(SV + '/api/instagram/feed?limit=50')
         .then(function(r) { return r.json(); })
         .then(function(d) {
             var posts = d.posts || [];
@@ -1585,6 +1587,7 @@ function loadFeed() {
                         // Update comments (only if not expanded by user)
                         if (!_expandedComments[pid]) {
                             var comms = p.comentarios || p.comments || [];
+                            if (!Array.isArray(comms)) comms = [];
                             var commArea = document.getElementById('comments-' + pid);
                             var viewBtn = postEl.querySelector('.post-view-comments');
                             if (commArea && comms.length > 0) {
@@ -1638,7 +1641,7 @@ function loadFeed() {
                 }
                 ehtml += '<div class="explore-item'+(isBig?' big':'')+'">' + pm +
                     (isReel ? '<div class="explore-reel-icon">\u25B6</div>' : '') +
-                    '<div class="explore-overlay"><span>\u2764\uFE0F '+fn(p.likes||0)+'</span><span>\u{1F4AC} '+(p.comments||p.comentarios||[]).length+'</span></div></div>';
+                    '<div class="explore-overlay"><span>\u2764\uFE0F '+fn(p.likes||0)+'</span><span>\u{1F4AC} '+(Array.isArray(p.comments)?p.comments:Array.isArray(p.comentarios)?p.comentarios:[]).length+'</span></div></div>';
             }
             document.getElementById('exploreGrid').innerHTML = ehtml || '<div class="ig-empty" style="grid-column:1/-1"><div class="ig-empty-icon">&#128269;</div>Explorando...</div>';
 
@@ -1868,7 +1871,7 @@ openNotifs = function() {
 };
 
 // Auto-refresh feed every 30s
-setInterval(function() { if (curTab === 'feed' && document.visibilityState === 'visible') loadFeed(); }, 90000);
+// Auto-refresh moved to single interval below
 // Poll notifications every 20s (only when visible)
 setInterval(function() {
     if (document.visibilityState === 'visible') pollNotifications();
@@ -2064,7 +2067,7 @@ function setupInfiniteScroll() {
 
 // ===================== INIT =====================
 checkAuth();
-loadFeed();
+// loadFeed() is called by preloadAgents().then() above - no need to call twice
 loadSidebar();
 loadFollowing();
 loadSuggested();
@@ -2074,7 +2077,7 @@ setInterval(function() {
         loadFeed();
         setTimeout(observeVideos, 1000);
     }
-}, 120000);
+}, 180000);
 setTimeout(observeVideos, 2000);
 
 
